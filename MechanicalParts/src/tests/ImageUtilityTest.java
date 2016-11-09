@@ -1,8 +1,10 @@
+package tests;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import pgmutilities.PgmUtilities;
-import pgmutilities.PGM;
+import model.PGM;
+import model.PgmUtilities;
 
 /**
  *
