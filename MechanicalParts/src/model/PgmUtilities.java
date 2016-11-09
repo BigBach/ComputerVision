@@ -361,4 +361,9 @@ public class PgmUtilities
         return histogram;
     }
     
+    
+    public PGM filterConvolution(Filter filter) {
+    
+        return null;
+    }
 }
