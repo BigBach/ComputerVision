@@ -10,7 +10,7 @@ public class Filter {
 
     /**
      * 
-     * @param array wich contains the value of each element of the filter
+     * @param array which contains the value of each element of the filter
      */
     public Filter(int[] array) {
         if (((array.length % 2) != 0) && (Math.sqrt(array.length) == (int) Math.sqrt(array.length))) {
@@ -19,5 +19,15 @@ public class Filter {
             System.err.println("The dimension of filter is not valid!");
         }
     }
+    
+    public int getSize(){
+        return (int) Math.sqrt(values.length);
+    }
+
+    public int[] getValues() {
+        return values;
+    }
+    
+    
 
 }

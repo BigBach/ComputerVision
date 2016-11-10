@@ -12,25 +12,25 @@ public class PgmUtilities {
     static int numLines = 0;
 
     /**
-     * 
+     *
      * @param width of the image
      * @param height of the image
      * @param max_val pixel of the image
      * @return a new empty pgm image
      */
     public PGM newPGM(int width, int height, int max_val) {
-        
+
         return new PGM(width, height, max_val);
     }
 
     /**
-     * 
+     *
      * @param br the buffered reader
      * @return the buffer wich contains the commented lines
-     * @throws IOException 
+     * @throws IOException
      */
     public String skipComments(BufferedReader br) throws IOException {
-        
+
         boolean loop = true;
         String buffer = br.readLine();
 
@@ -47,13 +47,13 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgm the image in PGM format
-     * 
+     *
      * This method set to zero all the pixels of a pgm image
      */
     public void resetPGM(PGM pgm) {
-        
+
         int width = pgm.getWidth();
         int height = pgm.getHeight();
         int i;
@@ -63,16 +63,16 @@ public class PgmUtilities {
             pgm.getPixels()[i] = 0;
         }
     }
- 
+
     /**
-     * 
+     *
      * @param filename the path of the image that must be read
      * @return the PGM image
-     * 
+     *
      * This method read pixels from different filetype
      */
     public PGM readPGM(String filename) {
-        
+
         int width, height, max_val;
         boolean binary;
 
@@ -112,8 +112,8 @@ public class PgmUtilities {
             max_val = Integer.parseInt(buffer);
 
             // Printing information on screen
-            System.out.println("\nPGM Filename: " + filename + "\nPGM Width & Height: " + width + "," + height + 
-                    "\nPGM Max Val & Type: " + max_val + "," + (binary ? "P5" : "P2") + "\n");
+            System.out.println("\nPGM Filename: " + filename + "\nPGM Width & Height: " + width + "," + height
+                    + "\nPGM Max Val & Type: " + max_val + "," + (binary ? "P5" : "P2") + "\n");
 
             // Initialize PGM
             pgm = newPGM(width, height, max_val);
@@ -171,14 +171,14 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgm the image in PGM format
      * @param filename the path where the image has to be saved
-     * 
+     *
      * This method write pixels inside images for different filetype
      */
     public void writePGM(PGM pgm, String filename) {
-        
+
         if (pgm == null) {
             System.err.println("Error! No data to write. Please Check.");
             return;
@@ -211,14 +211,15 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgmIn the input PGM image
      * @return the output PGM image after the inversion
-     * 
-     * This method inverts pixels grayscale value inside images for different filetype
+     *
+     * This method inverts pixels grayscale value inside images for different
+     * filetype
      */
     public PGM invertPGM(PGM pgmIn) {
-        
+
         if (pgmIn == null) {
             System.err.println("Error! No input data. Please Check.");
             return null;
@@ -241,14 +242,14 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgmIn the input PGM image
      * @return the output PGM image after the flip
-     * 
+     *
      * This method flips image horizontally
      */
     public PGM hflipPGM(PGM pgmIn) {
-        
+
         if (pgmIn == null) {
             System.err.println("Error! No input data. Please Check.");
             return null;
@@ -280,14 +281,14 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgmIn the input PGM image
      * @return the output PGM image after the copy
-     * 
+     *
      * This method copies a PGM image
      */
     public PGM copyPGM(PGM pgmIn) {
-        
+
         if (pgmIn == null) {
             System.err.println("Error! No input data. Please Check.");
             return null;
@@ -314,14 +315,14 @@ public class PgmUtilities {
     }
 
     /**
-     * 
+     *
      * @param pgm the input PGM image
      * @return the histogram of the input PGM image
-     * 
+     *
      * This method calculates the histogram
      */
     public int[] histogramPGM(PGM pgm) {
-        
+
         if (pgm == null) {
             System.err.println("Error! No input data. Please Check.");
             return null;
@@ -346,10 +347,32 @@ public class PgmUtilities {
         return histogram;
     }
 
-    public PGM filterConvolution(Filter filter) {
-        
-        
-        
-        return null;
+    public PGM filterConvolution(PGM inputPgm, Filter filter) {
+        int outputPgmWidth = inputPgm.getWidth() - filter.getSize() + 1;
+        int outputPgmHeigth = inputPgm.getHeight() - filter.getSize() + 1;
+        int[] outPixels = new int[outputPgmWidth * outputPgmHeigth];
+        int shift = (filter.getSize() - 1) / 2;
+        int x = 0;
+        for (int i = (inputPgm.getWidth() * shift + shift); i < (inputPgm.getWidth() * (inputPgm.getHeight() - shift) + inputPgm.getWidth() - shift); i++) {
+            int pixel = 0;
+            for (int j = (((int) (i / inputPgm.getWidth())) - shift) + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) - shift);
+                    j < ((((int) (i / inputPgm.getWidth())) + 3 * shift) + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + 3 * shift)); j++) {
+                pixel += inputPgm.getPixels()[j] * filter.getValues()[x - j];
+            }
+            outPixels[x] = pixel;
+            x++;
+        }
+        return new PGM(outputPgmWidth, outputPgmHeigth, 255);
     }
+
+//    for (int i = ((filter.getSize() - 1) / 2); i < (inputPgm.getHeight() - ((filter.getSize() - 1) / 2)); i++) {
+//            for (int j = ((filter.getSize() - 1) / 2); j < (inputPgm.getWidth() - ((filter.getSize() - 1) / 2)); j++) {
+//                int pixel = 0;
+//                for (int a = i - ((filter.getSize() - 1) / 2); a < (i - ((filter.getSize() - 1) / 2) + filter.getSize() - 1); a++) {
+//                    for (int b = j - ((filter.getSize() - 1) / 2); b < (j - ((filter.getSize() - 1) / 2) + filter.getSize() - 1); b++) {
+//                        pixel += outPixels[]
+//                    }
+//                }
+//            }
+//        }
 }
