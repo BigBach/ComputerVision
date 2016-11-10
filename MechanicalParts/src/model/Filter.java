@@ -16,7 +16,7 @@ public class Filter {
         if (((array.length % 2) != 0) && (Math.sqrt(array.length) == (int) Math.sqrt(array.length))) {
             this.values = array;
         } else {
-            //Throws an exception!!!
+            System.err.println("The dimension of filter is not valid!");
         }
     }
 
