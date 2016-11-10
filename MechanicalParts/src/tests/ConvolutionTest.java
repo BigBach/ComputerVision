@@ -7,8 +7,8 @@ import model.PgmUtilities;
 
 public class ConvolutionTest {
     
-public static final String IMG_PATH = "./images/1.-images_ì-_1_.pgm";
-public static final String OUTPUT_PATH = "./images/1.-images_ì-_1_OUT.pgm";
+public static final String IMG_PATH = "./images/1.-images-_1_.pgm";
+public static final String OUTPUT_PATH = "./images/1.-images-_1_OUT.pgm";
     
     public static void main(String[] args) {
         
