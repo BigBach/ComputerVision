@@ -6,13 +6,13 @@ package model;
  */
 public class Filter {
 
-    private int[] values;
+    private double[] values;
 
     /**
      * 
      * @param array which contains the value of each element of the filter
      */
-    public Filter(int[] array) {
+    public Filter(double[] array) {
         if (((array.length % 2) != 0) && (Math.sqrt(array.length) == (int) Math.sqrt(array.length))) {
             this.values = array;
         } else {
@@ -24,7 +24,7 @@ public class Filter {
         return (int) Math.sqrt(values.length);
     }
 
-    public int[] getValues() {
+    public double[] getValues() {
         return values;
     }
     

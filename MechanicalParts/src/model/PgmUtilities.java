@@ -353,16 +353,64 @@ public class PgmUtilities {
         int[] outPixels = new int[outputPgmWidth * outputPgmHeigth];
         int shift = (filter.getSize() - 1) / 2;
         int x = 0;
-        for (int i = (inputPgm.getWidth() * shift + shift); i < (inputPgm.getWidth() * (inputPgm.getHeight() - shift) + inputPgm.getWidth() - shift); i++) {
+        for (int i = (inputPgm.getWidth() * shift + shift); i < (inputPgm.getWidth() * ((inputPgm.getHeight() - 1) - shift) + (inputPgm.getWidth() - 1) - shift); i++) {
+            //System.out.println("i = " + i);
             int pixel = 0;
-            for (int j = (((int) (i / inputPgm.getWidth())) - shift) + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) - shift);
-                    j < ((((int) (i / inputPgm.getWidth())) + 3 * shift) + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + 3 * shift)); j++) {
-                pixel += inputPgm.getPixels()[j] * filter.getValues()[x - j];
+            int filterRowIndex = 0;
+            int filterColIndex = 0;
+            //System.out.println("Final j value = " + ((((int) (i / inputPgm.getWidth())) + shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + shift)));
+            for (int j = (((int) (i / inputPgm.getWidth())) - shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) - shift);
+                    j <= ((((int) (i / inputPgm.getWidth())) + shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + shift)); j++) {
+                //System.out.println("j = " + j);
+                pixel += (int)(((double)inputPgm.getPixels()[j]) * filter.getValues()[filterRowIndex * filter.getSize() + filterColIndex]);
+                filterColIndex += 1;
+                if (filterColIndex > (filter.getSize() - 1)) {
+                    filterRowIndex += 1;
+                    filterColIndex = 0;
+                    j += (inputPgm.getWidth() - (filter.getSize() - 1)) -1;
+                }
             }
-            outPixels[x] = pixel;
+            if (pixel > inputPgm.getMax_val()) {
+                outPixels[x] = inputPgm.getMax_val();
+            } else if (pixel < 0) {
+                outPixels[x] = 0;
+            } else{
+                outPixels[x] = pixel;
+            }
             x++;
+            if (i == (((int) (i / inputPgm.getWidth())) * inputPgm.getWidth() + ((inputPgm.getWidth() - 1) - shift))) {
+                i += filter.getSize() - 1;
+            }
         }
-        return new PGM(outputPgmWidth, outputPgmHeigth, 255);
+        PGM outputPgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPgm.getMax_val());
+        outputPgm.setPixels(outPixels);
+        return outputPgm;
+    }
+    
+    public PGM[] isotropicFilter(PGM inputPGM){
+        Filter isotropicHorizontal = new Filter(new double[]{-1,0,1,-Math.sqrt(2),0,Math.sqrt(2),-1,0,1});
+        Filter isotropicVertical = new Filter(new double[]{1,Math.sqrt(2),1,0,0,0,-1,-Math.sqrt(2),-1});
+        PGM horizontalFilteredPgm = filterConvolution(inputPGM, isotropicHorizontal);
+        PGM verticalFilteredPgm = filterConvolution(inputPGM, isotropicVertical);
+        PGM[] outputPgms = new PGM[2];
+        PGM modulePgm = new PGM(horizontalFilteredPgm.getWidth(), horizontalFilteredPgm.getHeight(), inputPGM.getMax_val());
+        int pixel = 0;
+        for(int i = 0; i < modulePgm.getPixels().length;i++){
+            pixel = (int)Math.sqrt(Math.pow(horizontalFilteredPgm.getPixels()[i],2) + Math.pow(verticalFilteredPgm.getPixels()[i], 2));
+            if (pixel > 200){
+                pixel = inputPGM.getMax_val();
+            } else{
+                pixel = 0;
+            }
+            modulePgm.getPixels()[i] = pixel;
+        }
+        
+         PGM phasePgm = new PGM(horizontalFilteredPgm.getWidth(), horizontalFilteredPgm.getHeight(), inputPGM.getMax_val());
+         //TO DO THE ASSIGNMENT OF THA VALUE OF PHASEPGM PIXELS...
+         
+        outputPgms[0] = modulePgm;
+        outputPgms[1] = phasePgm;
+        return outputPgms;
     }
 
 //    for (int i = ((filter.getSize() - 1) / 2); i < (inputPgm.getHeight() - ((filter.getSize() - 1) / 2)); i++) {
