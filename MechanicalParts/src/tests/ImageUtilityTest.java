@@ -9,12 +9,13 @@ import model.exceptions.InvalidPixelMatrixSizeException;
 
 /**
  *
- * @author Markenos & BigBach
+ * @author Marco Robutti - Filippo Cipolla
  */
 public class ImageUtilityTest {
 
     /**
      * @param args the command line arguments
+     * @throws model.exceptions.InvalidPixelMatrixSizeException
      */
     public static void main(String[] args) throws InvalidPixelMatrixSizeException {
         
@@ -35,7 +36,7 @@ public class ImageUtilityTest {
         PGM imgOut = pgmUtil.newPGM(imgIn.getWidth(), imgIn.getHeight(), imgIn.getMax_val());
 
         // copy the image
-    imgOut = pgmUtil.copyPGM(imgIn);
+        imgOut = pgmUtil.copyPGM(imgIn);
         pgmUtil.writePGM(imgOut, "copy.pgm");
 
         // flip the image
@@ -55,14 +56,12 @@ public class ImageUtilityTest {
         FileWriter fstream;
         try {
             fstream = new FileWriter("histogram.dat");
-            BufferedWriter out = new BufferedWriter(fstream);
-
-            for (i = 0; i < 256; i++) {
-                System.out.println("HISTOGRAM[" + i + "] = " + histogram[i]);
-                out.write(i + " " + histogram[i] + "\n");
+            try (BufferedWriter out = new BufferedWriter(fstream)) {
+                for (i = 0; i < 256; i++) {
+                    System.out.println("HISTOGRAM[" + i + "] = " + histogram[i]);
+                    out.write(i + " " + histogram[i] + "\n");
+                }
             }
-
-            out.close();
         } catch (IOException ex) {
             System.err.println("\nIOException. Check input Data.");
         }

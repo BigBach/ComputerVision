@@ -2,7 +2,7 @@ package model;
 
 /**
  * 
- * @author Markenos & BigBach
+ * @author Marco Robutti - Filippo Cipolla
  */
 public class Filter {
 
@@ -13,6 +13,7 @@ public class Filter {
      * @param array which contains the value of each element of the filter
      */
     public Filter(double[] array) {
+        
         if (((array.length % 2) != 0) && (Math.sqrt(array.length) == (int) Math.sqrt(array.length))) {
             this.values = array;
         } else {
@@ -20,14 +21,22 @@ public class Filter {
         }
     }
     
+    /**
+     * 
+     * @return the dimension n of current filter (n x n) 
+     */
     public int getSize(){
+        
         return (int) Math.sqrt(values.length);
     }
 
+    /**
+     * 
+     * @return the values of each content item in the filter
+     */
     public double[] getValues() {
+       
         return values;
     }
     
-    
-
 }

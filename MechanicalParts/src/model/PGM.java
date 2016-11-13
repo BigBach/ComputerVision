@@ -1,12 +1,10 @@
 package model;
 
-import com.sun.org.apache.xalan.internal.xsltc.util.IntegerArray;
-import java.util.Arrays;
 import model.exceptions.InvalidPixelMatrixSizeException;
 
 /**
  *
- * @author Markenos & BigBach
+ * @author Marco Robutti - Filippo Cipolla
  */
 public class PGM {
 
@@ -74,6 +72,7 @@ public class PGM {
      * @return the max_val of the image
      */
     public int getMax_val() {
+        
         return max_val;
     }
 
@@ -82,7 +81,9 @@ public class PGM {
      * @param max_val the max_val to set
      */
     public void setMax_val(int max_val) {
+        
         int previousMax_val = this.max_val;
+        
         if (max_val < 0) {
             this.max_val = 0;
         } else {
@@ -100,6 +101,7 @@ public class PGM {
      * @return the pixels of the image
      */
     public int[] getPixels() {
+        
         return this.pixels;
 //        int[] pixelsCopy = new int[pixels.length];
 //        //The clone() method in this case works correctly (i.e it doesn't
@@ -111,8 +113,10 @@ public class PGM {
     /**
      *
      * @param pixels the pixels to set
+     * @throws model.exceptions.InvalidPixelMatrixSizeException
      */
     public void setPixels(int[] pixels) throws InvalidPixelMatrixSizeException {
+        
         if (pixels.length != this.pixels.length) {
             throw new InvalidPixelMatrixSizeException("The size of the matrix doesn't match the actual size of the PGM image");
         }
@@ -121,7 +125,13 @@ public class PGM {
         }
     }
 
+    /**
+     * 
+     * @param index of the pixels arrayd
+     * @param value that has to be store in the array of pixels
+     */
     public void setPixel(int index, int value) {
+        
         if (value < 0) {
             value = 0;
         }
