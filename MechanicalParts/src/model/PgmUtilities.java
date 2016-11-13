@@ -2,6 +2,7 @@ package model;
 
 import java.io.*;
 import java.util.StringTokenizer;
+import model.exceptions.InvalidPixelMatrixSizeException;
 
 /**
  *
@@ -58,7 +59,7 @@ public class PgmUtilities {
         int height = pgm.getHeight();
         int i;
 
-        // set to zero all the pixels
+        // set to the 0 all the pixels
         for (i = 0; i < width * height; i++) {
             pgm.getPixels()[i] = 0;
         }
@@ -140,7 +141,7 @@ public class PgmUtilities {
                 int x = 0;
 
                 while ((num = in.read()) != -1) {
-                    pgm.getPixels()[x] = num;
+                    pgm.setPixel(x, num);
                     x++;
                 }
             } else // P2 case
@@ -149,7 +150,7 @@ public class PgmUtilities {
                 while ((buffer = br.readLine()) != null) {
                     st = new StringTokenizer(buffer);
                     while (st.hasMoreTokens()) {
-                        pgm.getPixels()[i] = Integer.parseInt(st.nextToken());
+                        pgm.setPixel(i, Integer.parseInt(st.nextToken()));
                         i++;
                     }
                 }
@@ -248,7 +249,7 @@ public class PgmUtilities {
      *
      * This method flips image horizontally
      */
-    public PGM hflipPGM(PGM pgmIn) {
+    public PGM hflipPGM(PGM pgmIn) throws InvalidPixelMatrixSizeException {
 
         if (pgmIn == null) {
             System.err.println("Error! No input data. Please Check.");
@@ -287,7 +288,7 @@ public class PgmUtilities {
      *
      * This method copies a PGM image
      */
-    public PGM copyPGM(PGM pgmIn) {
+    public PGM copyPGM(PGM pgmIn) throws InvalidPixelMatrixSizeException {
 
         if (pgmIn == null) {
             System.err.println("Error! No input data. Please Check.");
@@ -347,7 +348,45 @@ public class PgmUtilities {
         return histogram;
     }
 
-    public PGM filterConvolution(PGM inputPgm, Filter filter) {
+    public PGM filterConvolution(PGM inputPGM, Filter filter) throws InvalidPixelMatrixSizeException {
+        int[] outPixels = convolution(inputPGM, filter);
+        int outputPgmWidth = inputPGM.getWidth() - filter.getSize() + 1;
+        int outputPgmHeigth = inputPGM.getHeight() - filter.getSize() + 1;
+        PGM outputPgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
+        outputPgm.setPixels(outPixels);
+        return outputPgm;
+    }
+
+    public PGM[] isotropicFilter(PGM inputPGM, int threshold) throws InvalidPixelMatrixSizeException {
+        Filter isotropicHorizontal = new Filter(new double[]{-1, 0, 1, -Math.sqrt(2), 0, Math.sqrt(2), -1, 0, 1});
+        Filter isotropicVertical = new Filter(new double[]{1, Math.sqrt(2), 1, 0, 0, 0, -1, -Math.sqrt(2), -1});
+        int outputPgmWidth = inputPGM.getWidth() - isotropicHorizontal.getSize() + 1;
+        int outputPgmHeigth = inputPGM.getHeight() - isotropicHorizontal.getSize() + 1;
+        int[] horizontalFilteredPixels = convolution(inputPGM, isotropicHorizontal);
+        int[] verticalFilteredPixels = convolution(inputPGM, isotropicVertical);
+        int[] modulePixels = new int[horizontalFilteredPixels.length];
+        int pixel = 0;
+        for (int i = 0; i < modulePixels.length; i++) {
+            pixel = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
+            if (pixel > threshold) {
+                pixel = inputPGM.getMax_val();
+            } else {
+                pixel = 0;
+            }
+            modulePixels[i] = pixel;
+        }
+        PGM modulePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
+        modulePgm.setPixels(modulePixels);
+        PGM phasePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
+         //TO DO THE ASSIGNMENT OF THA VALUE OF PHASEPGM PIXELS...
+
+        PGM[] outputPgms = new PGM[2];
+        outputPgms[0] = modulePgm;
+        outputPgms[1] = phasePgm;
+        return outputPgms;
+    }
+
+    private int[] convolution(PGM inputPgm, Filter filter) {
         int outputPgmWidth = inputPgm.getWidth() - filter.getSize() + 1;
         int outputPgmHeigth = inputPgm.getHeight() - filter.getSize() + 1;
         int[] outPixels = new int[outputPgmWidth * outputPgmHeigth];
@@ -362,55 +401,21 @@ public class PgmUtilities {
             for (int j = (((int) (i / inputPgm.getWidth())) - shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) - shift);
                     j <= ((((int) (i / inputPgm.getWidth())) + shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + shift)); j++) {
                 //System.out.println("j = " + j);
-                pixel += (int)(((double)inputPgm.getPixels()[j]) * filter.getValues()[filterRowIndex * filter.getSize() + filterColIndex]);
+                pixel += (int) (((double) inputPgm.getPixels()[j]) * filter.getValues()[filterRowIndex * filter.getSize() + filterColIndex]);
                 filterColIndex += 1;
                 if (filterColIndex > (filter.getSize() - 1)) {
                     filterRowIndex += 1;
                     filterColIndex = 0;
-                    j += (inputPgm.getWidth() - (filter.getSize() - 1)) -1;
+                    j += (inputPgm.getWidth() - (filter.getSize() - 1)) - 1;
                 }
             }
-            if (pixel > inputPgm.getMax_val()) {
-                outPixels[x] = inputPgm.getMax_val();
-            } else if (pixel < 0) {
-                outPixels[x] = 0;
-            } else{
-                outPixels[x] = pixel;
-            }
+            outPixels[x] = pixel;
             x++;
             if (i == (((int) (i / inputPgm.getWidth())) * inputPgm.getWidth() + ((inputPgm.getWidth() - 1) - shift))) {
                 i += filter.getSize() - 1;
             }
         }
-        PGM outputPgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPgm.getMax_val());
-        outputPgm.setPixels(outPixels);
-        return outputPgm;
-    }
-    
-    public PGM[] isotropicFilter(PGM inputPGM){
-        Filter isotropicHorizontal = new Filter(new double[]{-1,0,1,-Math.sqrt(2),0,Math.sqrt(2),-1,0,1});
-        Filter isotropicVertical = new Filter(new double[]{1,Math.sqrt(2),1,0,0,0,-1,-Math.sqrt(2),-1});
-        PGM horizontalFilteredPgm = filterConvolution(inputPGM, isotropicHorizontal);
-        PGM verticalFilteredPgm = filterConvolution(inputPGM, isotropicVertical);
-        PGM[] outputPgms = new PGM[2];
-        PGM modulePgm = new PGM(horizontalFilteredPgm.getWidth(), horizontalFilteredPgm.getHeight(), inputPGM.getMax_val());
-        int pixel = 0;
-        for(int i = 0; i < modulePgm.getPixels().length;i++){
-            pixel = (int)Math.sqrt(Math.pow(horizontalFilteredPgm.getPixels()[i],2) + Math.pow(verticalFilteredPgm.getPixels()[i], 2));
-            if (pixel > 200){
-                pixel = inputPGM.getMax_val();
-            } else{
-                pixel = 0;
-            }
-            modulePgm.getPixels()[i] = pixel;
-        }
-        
-         PGM phasePgm = new PGM(horizontalFilteredPgm.getWidth(), horizontalFilteredPgm.getHeight(), inputPGM.getMax_val());
-         //TO DO THE ASSIGNMENT OF THA VALUE OF PHASEPGM PIXELS...
-         
-        outputPgms[0] = modulePgm;
-        outputPgms[1] = phasePgm;
-        return outputPgms;
+        return outPixels;
     }
 
 //    for (int i = ((filter.getSize() - 1) / 2); i < (inputPgm.getHeight() - ((filter.getSize() - 1) / 2)); i++) {

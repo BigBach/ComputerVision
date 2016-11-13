@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import model.PGM;
 import model.PgmUtilities;
+import model.exceptions.InvalidPixelMatrixSizeException;
 
 /**
  *
@@ -15,7 +16,7 @@ public class ImageUtilityTest {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InvalidPixelMatrixSizeException {
         
         if (args.length == 0) {
             System.err.println("Error! No file name.");
@@ -34,7 +35,7 @@ public class ImageUtilityTest {
         PGM imgOut = pgmUtil.newPGM(imgIn.getWidth(), imgIn.getHeight(), imgIn.getMax_val());
 
         // copy the image
-        imgOut = pgmUtil.copyPGM(imgIn);
+    imgOut = pgmUtil.copyPGM(imgIn);
         pgmUtil.writePGM(imgOut, "copy.pgm");
 
         // flip the image
