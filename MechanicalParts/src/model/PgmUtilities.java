@@ -372,11 +372,11 @@ public class PgmUtilities {
     /**
      * 
      * @param inputPGM the input PGM image
-     * @param threshold for thresholding the module of image after the application of the isotropic filter
+     * @param moduleThreshold for thresholding the module of image after the application of the isotropic filter
      * @return two images: one for the module of isotropic filter and the other for the phase
      * @throws InvalidPixelMatrixSizeException 
      */
-    public PGM[] isotropicFilter(PGM inputPGM, int threshold) throws InvalidPixelMatrixSizeException {
+    public PGM[] isotropicFilter(PGM inputPGM, int moduleThreshold, int phaseThreshold) throws InvalidPixelMatrixSizeException {
         
         Filter isotropicHorizontal = new Filter(new double[]{-1, 0, 1, -Math.sqrt(2), 0, Math.sqrt(2), -1, 0, 1});
         Filter isotropicVertical = new Filter(new double[]{1, Math.sqrt(2), 1, 0, 0, 0, -1, -Math.sqrt(2), -1});
@@ -386,20 +386,30 @@ public class PgmUtilities {
         int[] horizontalFilteredPixels = convolution(inputPGM, isotropicHorizontal);
         int[] verticalFilteredPixels = convolution(inputPGM, isotropicVertical);
         int[] modulePixels = new int[horizontalFilteredPixels.length];
-        int pixel = 0;
         
         for (int i = 0; i < modulePixels.length; i++) {
-            pixel = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
-            modulePixels[i] = pixel;
+            modulePixels[i] = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
         }
         
-        modulePixels = rescalePixels(modulePixels);
-        modulePixels = thresholdPixels(modulePixels, 100, 0, inputPGM.getMax_val());
+        modulePixels = rescalePixels(modulePixels,minPixel(modulePixels),maxPixel(modulePixels));
+        modulePixels = thresholdPixels(modulePixels, moduleThreshold, 0, inputPGM.getMax_val());
        
         PGM modulePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
         modulePgm.setPixels(modulePixels);
+        
+        
+        
+        double[] phasePixels = new double[horizontalFilteredPixels.length];
+        for (int i = 0; i < phasePixels.length; i++) {
+            phasePixels[i] =(Math.atan2((double)verticalFilteredPixels[i], (double)horizontalFilteredPixels[i]));
+        }
+        double minPhasePixel = minPixel(phasePixels);
+        double maxPhasePixel = maxPixel(phasePixels);
+        phaseThreshold = rescalePixel(phaseThreshold,minPhasePixel ,maxPhasePixel);
+        int[] intPhasePixels = rescalePixels(phasePixels, minPhasePixel, maxPhasePixel);
+        intPhasePixels = thresholdPixels(intPhasePixels, phaseThreshold, 0, inputPGM.getMax_val());
         PGM phasePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
-        //TO DO THE ASSIGNMENT OF THA VALUE OF PHASEPGM PIXELS...
+        phasePgm.setPixels(intPhasePixels);
 
         PGM[] outputPgms = new PGM[2];
         outputPgms[0] = modulePgm;
@@ -451,16 +461,31 @@ public class PgmUtilities {
         return outPixels;
     }
     
-    private int[] rescalePixels(int[] pixels) {
-    
-        int maxPixel = this.maxPixel(pixels);
-        int minPixel = this.minPixel(pixels);
-        
+    private int[] rescalePixels(int[] pixels,int min, int max) {
         for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = (int) ((255 * (pixels[i] - minPixel)) / maxPixel);
+            pixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
         }
         
         return pixels;
+    }
+    
+    private int[] rescalePixels(double[] pixels,double min, double max) {
+        int[] intPixels = new int[pixels.length];
+        for (int i = 0; i < intPixels.length; i++) {
+            intPixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
+        }
+        
+        return intPixels;
+    }
+    
+    private int rescalePixel(int pixel, int min, int max) {
+    
+        return (int) ((255 * (pixel - min)) / (max - min));
+    }
+    
+    private int rescalePixel(int pixel, double min, double max) {
+    
+        return (int) ((255 * ((double)((pixel*Math.PI)/180) - min)) / (max - min));
     }
     
     private int[] thresholdPixels(int[] pixels, int threshold, int minPixel, int maxPixel) {
@@ -489,9 +514,35 @@ public class PgmUtilities {
         return max;
     }
     
+    private double maxPixel (double[] pixels) {
+    
+        double max = pixels[0];
+        
+        for (int i = 1; i < pixels.length; i++) {
+            if (pixels[i] > max) {
+                max = pixels[i];
+            }
+        }
+        
+        return max;
+    }
+    
     private int minPixel (int[] pixels) {
     
         int min = pixels[0];
+        
+        for (int i = 1; i < pixels.length; i++) {
+            if (pixels[i] < min) {
+                min = pixels[i];
+            }
+        }
+        
+        return min;
+    }
+    
+    private double minPixel (double[] pixels) {
+    
+        double min = pixels[0];
         
         for (int i = 1; i < pixels.length; i++) {
             if (pixels[i] < min) {
