@@ -390,14 +390,12 @@ public class PgmUtilities {
         
         for (int i = 0; i < modulePixels.length; i++) {
             pixel = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
-            if (pixel > threshold) {
-                pixel = inputPGM.getMax_val();
-            } else {
-                pixel = 0;
-            }
             modulePixels[i] = pixel;
         }
         
+        modulePixels = rescalePixels(modulePixels);
+        modulePixels = thresholdPixels(modulePixels, 100, 0, inputPGM.getMax_val());
+       
         PGM modulePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
         modulePgm.setPixels(modulePixels);
         PGM phasePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
@@ -451,6 +449,57 @@ public class PgmUtilities {
         }
         
         return outPixels;
+    }
+    
+    private int[] rescalePixels(int[] pixels) {
+    
+        int maxPixel = this.maxPixel(pixels);
+        int minPixel = this.minPixel(pixels);
+        
+        for (int i = 0; i < pixels.length; i++) {
+            pixels[i] = (int) ((255 * (pixels[i] - minPixel)) / maxPixel);
+        }
+        
+        return pixels;
+    }
+    
+    private int[] thresholdPixels(int[] pixels, int threshold, int minPixel, int maxPixel) {
+        
+        for (int i = 0; i < pixels.length; i++) {
+            if (pixels[i] > threshold) {
+                pixels[i] = maxPixel;
+            } else {
+                pixels[i] = minPixel;
+            }
+        }
+        
+        return pixels;
+    }
+    
+    private int maxPixel (int[] pixels) {
+    
+        int max = pixels[0];
+        
+        for (int i = 1; i < pixels.length; i++) {
+            if (pixels[i] > max) {
+                max = pixels[i];
+            }
+        }
+        
+        return max;
+    }
+    
+    private int minPixel (int[] pixels) {
+    
+        int min = pixels[0];
+        
+        for (int i = 1; i < pixels.length; i++) {
+            if (pixels[i] < min) {
+                min = pixels[i];
+            }
+        }
+        
+        return min;
     }
 
 //    for (int i = ((filter.getSize() - 1) / 2); i < (inputPgm.getHeight() - ((filter.getSize() - 1) / 2)); i++) {
