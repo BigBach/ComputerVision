@@ -118,7 +118,8 @@ public class PGM {
     public void setPixels(int[] pixels) throws InvalidPixelMatrixSizeException {
         
         if (pixels.length != this.pixels.length) {
-            throw new InvalidPixelMatrixSizeException("The size of the matrix doesn't match the actual size of the PGM image");
+            throw new InvalidPixelMatrixSizeException("The size of the matrix "
+                    + "doesn't match the actual size of the PGM image");
         }
         for (int i = 0; i < this.pixels.length; i++) {
             this.setPixel(i, pixels[i]);
@@ -127,7 +128,7 @@ public class PGM {
 
     /**
      * 
-     * @param index of the pixels arrayd
+     * @param index of the pixels array
      * @param value that has to be store in the array of pixels
      */
     public void setPixel(int index, int value) {

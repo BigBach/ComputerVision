@@ -113,16 +113,17 @@ public class PgmUtilities {
             max_val = Integer.parseInt(buffer);
 
             // Printing information on screen
-            System.out.println("\nPGM Filename: " + filename + "\nPGM Width & Height: " + width + "," + height
-                    + "\nPGM Max Val & Type: " + max_val + "," + (binary ? "P5" : "P2") + "\n");
+            System.out.println("\nPGM Filename: " + filename + 
+                    "\nPGM Width & Height: " + width + "," + height + 
+                    "\nPGM Max Val & Type: " + max_val + "," +
+                    (binary ? "P5" : "P2") + "\n");
 
             // Initialize PGM
             pgm = newPGM(width, height, max_val);
 
             // Reading Pixels
-            if (binary) // P5 case
-            {
-
+            if (binary) {
+                // P5 case
                 br.close();
                 fstream = new FileInputStream(filename);
                 in = new DataInputStream(fstream);
@@ -144,8 +145,8 @@ public class PgmUtilities {
                     pgm.setPixel(x, num);
                     x++;
                 }
-            } else // P2 case
-            {
+            } else {
+                // P2 case
                 int i = 0;
                 while ((buffer = br.readLine()) != null) {
                     st = new StringTokenizer(buffer);
@@ -190,7 +191,8 @@ public class PgmUtilities {
             fstream = new FileWriter(filename);
             BufferedWriter out = new BufferedWriter(fstream);
 
-            out.write("P2\n" + pgm.getWidth() + " " + pgm.getHeight() + "\n" + pgm.getMax_val() + "\n");
+            out.write("P2\n" + pgm.getWidth() + " " + pgm.getHeight() + "\n" +
+                    pgm.getMax_val() + "\n");
 
             int i;
             int width = pgm.getWidth();
@@ -226,7 +228,8 @@ public class PgmUtilities {
             return null;
         }
 
-        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(), pgmIn.getMax_val());
+        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(), 
+                pgmIn.getMax_val());
         int i, inv;
         int max = pgmIn.getMax_val();
         int width = pgmIn.getWidth();
@@ -257,7 +260,8 @@ public class PgmUtilities {
             return null;
         }
 
-        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(), pgmIn.getMax_val());
+        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(),
+                pgmIn.getMax_val());
 
         int i, j;
         int hfp;
@@ -296,7 +300,8 @@ public class PgmUtilities {
             System.err.println("Error! No input data. Please Check.");
             return null;
         }
-        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(), pgmIn.getMax_val());
+        PGM pgmOut = new PGM(pgmIn.getWidth(), pgmIn.getHeight(),
+                pgmIn.getMax_val());
 
         int i;
 
@@ -338,8 +343,7 @@ public class PgmUtilities {
         int height = pgm.getHeight();
         int max_val = pgm.getMax_val();
 
-        // if max_val is 255 each pixel of the image can have a value between [0;255]
-        // so histogram have a dimension of 256
+        // histogram have a dimension of 256
         int[] histogram = new int[max_val + 1];
 
         for (i = 0; i < width * height; i++) {
@@ -373,10 +377,12 @@ public class PgmUtilities {
      * 
      * @param inputPGM the input PGM image
      * @param moduleThreshold for thresholding the module of image after the application of the isotropic filter
+     * @param phaseThreshold for thresholding the phase of image after the application of the isotropic filter
      * @return two images: one for the module of isotropic filter and the other for the phase
      * @throws InvalidPixelMatrixSizeException 
      */
-    public PGM[] isotropicFilter(PGM inputPGM, int moduleThreshold, int phaseThreshold) throws InvalidPixelMatrixSizeException {
+    public PGM[] isotropicFilter(PGM inputPGM, int moduleThreshold, int phaseThreshold) throws
+            InvalidPixelMatrixSizeException {
         
         Filter isotropicHorizontal = new Filter(new double[]{-1, 0, 1, -Math.sqrt(2), 0, Math.sqrt(2), -1, 0, 1});
         Filter isotropicVertical = new Filter(new double[]{1, Math.sqrt(2), 1, 0, 0, 0, -1, -Math.sqrt(2), -1});
@@ -388,7 +394,8 @@ public class PgmUtilities {
         int[] modulePixels = new int[horizontalFilteredPixels.length];
         
         for (int i = 0; i < modulePixels.length; i++) {
-            modulePixels[i] = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
+            modulePixels[i] = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) +
+                    Math.pow(verticalFilteredPixels[i], 2));
         }
         
         modulePixels = rescalePixels(modulePixels,minPixel(modulePixels),maxPixel(modulePixels));
@@ -396,8 +403,6 @@ public class PgmUtilities {
        
         PGM modulePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
         modulePgm.setPixels(modulePixels);
-        
-        
         
         double[] phasePixels = new double[horizontalFilteredPixels.length];
         for (int i = 0; i < phasePixels.length; i++) {
@@ -432,7 +437,7 @@ public class PgmUtilities {
         int shift = (filter.getSize() - 1) / 2;
         int x = 0;
         
-        for (int i = (inputPgm.getWidth() * shift + shift); i < (inputPgm.getWidth() * ((inputPgm.getHeight() - 1) - shift) + (inputPgm.getWidth() - 1) - shift); i++) {
+        for (int i = (inputPgm.getWidth() * shift + shift);i < (inputPgm.getWidth() * ((inputPgm.getHeight() - 1) - shift) + (inputPgm.getWidth() - 1) - shift); i++) {
             //System.out.println("i = " + i);
             int pixel = 0;
             int filterRowIndex = 0;
@@ -461,7 +466,15 @@ public class PgmUtilities {
         return outPixels;
     }
     
-    private int[] rescalePixels(int[] pixels,int min, int max) {
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @param min the max value of the pixels
+     * @param max the min value of the pixels
+     * @return the same pixels but riscalated between min and max (it's useful for the module)
+     */
+    private int[] rescalePixels(int[] pixels, int min, int max) {
+        
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
         }
@@ -469,7 +482,15 @@ public class PgmUtilities {
         return pixels;
     }
     
-    private int[] rescalePixels(double[] pixels,double min, double max) {
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @param min the max value of the pixels
+     * @param max the min value of the pixels
+     * @return the same pixels but riscalated between min and max (it's useful for the phase)
+     */
+    private int[] rescalePixels(double[] pixels, double min, double max) {
+        
         int[] intPixels = new int[pixels.length];
         for (int i = 0; i < intPixels.length; i++) {
             intPixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
@@ -477,17 +498,27 @@ public class PgmUtilities {
         
         return intPixels;
     }
-    
-    private int rescalePixel(int pixel, int min, int max) {
-    
-        return (int) ((255 * (pixel - min)) / (max - min));
-    }
-    
+        
+    /**
+     * 
+     * @param pixel the value of a single pixel in input
+     * @param min the min value for the pixel
+     * @param max the max value for the pixel
+     * @return the same pixel but it's riscalated between min and max (it's useful for the phase)
+     */
     private int rescalePixel(int pixel, double min, double max) {
     
         return (int) ((255 * ((double)((pixel*Math.PI)/180) - min)) / (max - min));
     }
     
+    /**
+     * 
+     * @param pixels the set of pixels of the input image
+     * @param threshold the value for thresholding the pixels
+     * @param minPixel the min value for the pixel
+     * @param maxPixel the max value for the pixel
+     * @return 
+     */
     private int[] thresholdPixels(int[] pixels, int threshold, int minPixel, int maxPixel) {
         
         for (int i = 0; i < pixels.length; i++) {
@@ -501,6 +532,11 @@ public class PgmUtilities {
         return pixels;
     }
     
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @return the max value of pixels (it's useful for the module)
+     */
     private int maxPixel (int[] pixels) {
     
         int max = pixels[0];
@@ -514,6 +550,11 @@ public class PgmUtilities {
         return max;
     }
     
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @return the max value of pixels (it's useful for the phase)
+     */
     private double maxPixel (double[] pixels) {
     
         double max = pixels[0];
@@ -527,6 +568,11 @@ public class PgmUtilities {
         return max;
     }
     
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @return the min value of pixels (it's useful for the module)
+     */
     private int minPixel (int[] pixels) {
     
         int min = pixels[0];
@@ -540,6 +586,11 @@ public class PgmUtilities {
         return min;
     }
     
+    /**
+     * 
+     * @param pixels the pixels of the initial image
+     * @return the min value of pixels (it's useful for the phase)
+     */
     private double minPixel (double[] pixels) {
     
         double min = pixels[0];
