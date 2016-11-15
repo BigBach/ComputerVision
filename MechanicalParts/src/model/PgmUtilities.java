@@ -498,7 +498,7 @@ public class PgmUtilities {
         
         return intPixels;
     }
-        
+    
     /**
      * 
      * @param pixel the value of a single pixel in input
