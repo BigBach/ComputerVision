@@ -1,0 +1,42 @@
+/**
+     * 
+     * @param inputPgm the input PGM image
+     * @param filter to apply for the output image
+     * @return the pixels of the image with the application of convolution operator
+     */
+    private int[] convolution(PGM inputPgm, Filter filter) {
+        
+        int outputPgmWidth = inputPgm.getWidth() - filter.getSize() + 1;
+        int outputPgmHeigth = inputPgm.getHeight() - filter.getSize() + 1;
+        int[] outPixels = new int[outputPgmWidth * outputPgmHeigth];
+        int shift = (filter.getSize() - 1) / 2;
+        int x = 0;
+        
+        for (int i = (inputPgm.getWidth() * shift + shift); i < (inputPgm.getWidth() * ((inputPgm.getHeight() - 1) - shift) + (inputPgm.getWidth() - 1) - shift); i++) {
+            //System.out.println("i = " + i);
+            int pixel = 0;
+            int filterRowIndex = 0;
+            int filterColIndex = 0;
+            //System.out.println("Final j value = " + ((((int) (i / inputPgm.getWidth())) + shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + shift)));
+            for (int j = (((int) (i / inputPgm.getWidth())) - shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) - shift);
+                    j <= ((((int) (i / inputPgm.getWidth())) + shift) * inputPgm.getWidth() + (i - ((int) (i / inputPgm.getWidth()) * inputPgm.getWidth()) + shift)); j++) {
+                //System.out.println("j = " + j);
+                pixel += (int) (((double) inputPgm.getPixels()[j]) * filter.getValues()[filterRowIndex * filter.getSize() + filterColIndex]);
+                filterColIndex += 1;
+                if (filterColIndex > (filter.getSize() - 1)) {
+                    filterRowIndex += 1;
+                    filterColIndex = 0;
+                    j += (inputPgm.getWidth() - (filter.getSize() - 1)) - 1;
+                }
+            }
+            
+            outPixels[x] = pixel;
+            x++;
+            
+            if (i == (((int) (i / inputPgm.getWidth())) * inputPgm.getWidth() + ((inputPgm.getWidth() - 1) - shift))) {
+                i += filter.getSize() - 1;
+            }
+        }
+        
+        return outPixels;
+    }
