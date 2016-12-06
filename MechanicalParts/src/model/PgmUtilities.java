@@ -141,7 +141,7 @@ public class PgmUtilities {
                 int x = 0;
 
                 while ((num = in.read()) != -1) {
-                    pgm.setPixel(x, num);
+                    pgm.getPixels()[x] = num;
                     x++;
                 }
             } else // P2 case
@@ -150,7 +150,7 @@ public class PgmUtilities {
                 while ((buffer = br.readLine()) != null) {
                     st = new StringTokenizer(buffer);
                     while (st.hasMoreTokens()) {
-                        pgm.setPixel(i, Integer.parseInt(st.nextToken()));
+                        pgm.getPixels()[i] = Integer.parseInt(st.nextToken());
                         i++;
                     }
                 }
@@ -265,8 +265,8 @@ public class PgmUtilities {
         int width = pgmIn.getWidth();
         int height = pgmIn.getHeight();
 
-        int[] inputPixels = pgmIn.getPixels();
-        int[] flipPixels = new int[width * height];
+        Integer[] inputPixels = pgmIn.getPixels();
+        Integer[] flipPixels = new Integer[width * height];
 
         // Modify Pixels
         for (i = 0; i < height; i++) {
@@ -277,7 +277,7 @@ public class PgmUtilities {
             }
         }
 
-        pgmOut.setPixels(flipPixels);
+        pgmOut.getPixelMatrix().setMatrix(flipPixels);
 
         return pgmOut;
     }
@@ -303,8 +303,8 @@ public class PgmUtilities {
         int width = pgmIn.getWidth();
         int height = pgmIn.getHeight();
 
-        int[] inPixels = pgmIn.getPixels();
-        int[] outPixels = new int[width * height];
+        Integer[] inPixels = pgmIn.getPixels();
+        Integer[] outPixels = new Integer[width * height];
 
         // Copy image
         for (i = 0; i < width * height; i++) {
@@ -312,7 +312,7 @@ public class PgmUtilities {
             outPixels[i] = inPixels[i];
         }
 
-        pgmOut.setPixels(outPixels);
+        pgmOut.getPixelMatrix().setMatrix(outPixels);
 
         return pgmOut;
     }
@@ -333,7 +333,7 @@ public class PgmUtilities {
 
         int i, index;
 
-        int[] inPixels = pgm.getPixels();
+        Integer[] inPixels = pgm.getPixels();
         int width = pgm.getWidth();
         int height = pgm.getHeight();
         int max_val = pgm.getMax_val();
@@ -350,208 +350,32 @@ public class PgmUtilities {
         return histogram;
     }
 
-    /**
-     *
-     * @param inputPGM the input PGM image
-     * @param filter to apply for the output image
-     * @return the PGM image with the application of convolution
-     * @throws InvalidPixelMatrixSizeException
-     */
-    public PGM filterConvolution(PGM inputPGM, Filter filter) throws InvalidPixelMatrixSizeException {
+    public PGM equalizePGM(PGM inputPgm) {
+        PGM outputPgm = inputPgm;
+        int width = inputPgm.getWidth();
+        int height = inputPgm.getHeight();
+        int anzpixel = width * height;
+        int[] histogram = histogramPGM(outputPgm);
+        int[] iarray = new int[1];
+        int i = 0;
 
-        int[] outPixels = convolution(inputPGM, filter);
-        int outputPgmWidth = inputPGM.getWidth() - filter.getSize() + 1;
-        int outputPgmHeigth = inputPGM.getHeight() - filter.getSize() + 1;
+        int sum = 0;
+        // build a Lookup table LUT containing scale factor
+        float[] lut = new float[anzpixel];
+        for (i = 0; i < 255; ++i) {
+            sum += histogram[i];
+            lut[i] = sum * 255 / anzpixel;
+        }
 
-        PGM outputPgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
-        outputPgm.setPixels(outPixels);
-
+        // transform image using sum histogram as a Lookup table
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int valueBefore = outputPgm.getPixels()[y * width + x];
+                int valueAfter = (int) lut[valueBefore];
+                outputPgm.getPixels()[y * width + x] = valueAfter;
+            }
+        }
         return outputPgm;
     }
 
-    /**
-     *
-     * @param inputPGM the input PGM image
-     * @param moduleThreshold for thresholding the module of image after the
-     * application of the isotropic filter
-     * @return two images: one for the module of isotropic filter and the other
-     * for the phase
-     * @throws InvalidPixelMatrixSizeException
-     */
-    public PGM[] isotropicFilter(PGM inputPGM, int moduleThreshold, int phaseThreshold) throws InvalidPixelMatrixSizeException {
-
-        Filter isotropicHorizontal = new Filter(new double[]{-1, 0, 1, -Math.sqrt(2), 0, Math.sqrt(2), -1, 0, 1});
-        Filter isotropicVertical = new Filter(new double[]{1, Math.sqrt(2), 1, 0, 0, 0, -1, -Math.sqrt(2), -1});
-
-        int outputPgmWidth = inputPGM.getWidth() - isotropicHorizontal.getSize() + 1;
-        int outputPgmHeigth = inputPGM.getHeight() - isotropicHorizontal.getSize() + 1;
-        int[] horizontalFilteredPixels = convolution(inputPGM, isotropicHorizontal);
-        int[] verticalFilteredPixels = convolution(inputPGM, isotropicVertical);
-        int[] modulePixels = new int[horizontalFilteredPixels.length];
-
-        for (int i = 0; i < modulePixels.length; i++) {
-            modulePixels[i] = (int) Math.sqrt(Math.pow(horizontalFilteredPixels[i], 2) + Math.pow(verticalFilteredPixels[i], 2));
-        }
-
-        modulePixels = rescalePixels(modulePixels, minPixel(modulePixels), maxPixel(modulePixels));
-        modulePixels = thresholdPixels(modulePixels, moduleThreshold, 0, inputPGM.getMax_val());
-
-        PGM modulePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
-        modulePgm.setPixels(modulePixels);
-
-        double[] phasePixels = new double[horizontalFilteredPixels.length];
-        for (int i = 0; i < phasePixels.length; i++) {
-            phasePixels[i] = (Math.atan2((double) verticalFilteredPixels[i], (double) horizontalFilteredPixels[i]));
-        }
-        double minPhasePixel = minPixel(phasePixels);
-        double maxPhasePixel = maxPixel(phasePixels);
-        phaseThreshold = rescalePixel(phaseThreshold, minPhasePixel, maxPhasePixel);
-        int[] intPhasePixels = rescalePixels(phasePixels, minPhasePixel, maxPhasePixel);
-        intPhasePixels = thresholdPixels(intPhasePixels, phaseThreshold, 0, inputPGM.getMax_val());
-        PGM phasePgm = new PGM(outputPgmWidth, outputPgmHeigth, inputPGM.getMax_val());
-        phasePgm.setPixels(intPhasePixels);
-
-        PGM[] outputPgms = new PGM[2];
-        outputPgms[0] = modulePgm;
-        outputPgms[1] = phasePgm;
-
-        return outputPgms;
-    }
-
-    /**
-     *
-     * @param inputPgm the input PGM image
-     * @param filter to apply for the output image
-     * @return the pixels of the image with the application of convolution
-     * operator
-     */
-    private int[] convolution(PGM inputPgm, Filter filter) {
-        int outputWidth = inputPgm.getWidth() - filter.getSize() + 1;
-        int outputHeigth = inputPgm.getHeight() - filter.getSize() + 1;
-        int[] outPixels = new int[outputWidth * outputHeigth];
-        int x = 0;
-        for (int i = 0; i < ((inputPgm.getPixels().length - 1) - (filter.getSize() * inputPgm.getWidth() - 1) - (filter.getSize() - 1)); i++) {
-            int pixel = 0;
-            for (int j = 0; j < filter.getValues().length; j++) {
-                pixel += inputPgm.getPixels()[i] * filter.getValues()[j];
-                if (((j + 1) % 3) == 0) {
-                    i += inputPgm.getWidth() - (filter.getSize() - 1);
-                } else {
-                    i++;
-                }
-            }
-            outPixels[x] = pixel;
-            x++;
-            i = i - (filter.getSize() - 1) - (filter.getSize() - 1) * inputPgm.getWidth();
-            if ((((i + (filter.getSize() - 1)) + 1) % inputPgm.getWidth()) == 0) {
-                i += (filter.getSize() - 1); //-1 because the for cycle will increment i of 1...
-            } else {
-                i++;
-            }
-        }
-        return outPixels;
-    }
-
-    private int[] rescalePixels(int[] pixels, int min, int max) {
-        for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
-        }
-
-        return pixels;
-    }
-
-    private int[] rescalePixels(double[] pixels, double min, double max) {
-        int[] intPixels = new int[pixels.length];
-        for (int i = 0; i < intPixels.length; i++) {
-            intPixels[i] = (int) ((255 * (pixels[i] - min)) / (max - min));
-        }
-
-        return intPixels;
-    }
-
-    private int rescalePixel(int pixel, int min, int max) {
-
-        return (int) ((255 * (pixel - min)) / (max - min));
-    }
-
-    private int rescalePixel(int pixel, double min, double max) {
-
-        return (int) ((255 * ((double) ((pixel * Math.PI) / 180) - min)) / (max - min));
-    }
-
-    private int[] thresholdPixels(int[] pixels, int threshold, int minPixel, int maxPixel) {
-
-        for (int i = 0; i < pixels.length; i++) {
-            if (pixels[i] > threshold) {
-                pixels[i] = maxPixel;
-            } else {
-                pixels[i] = minPixel;
-            }
-        }
-
-        return pixels;
-    }
-
-    private int maxPixel(int[] pixels) {
-
-        int max = pixels[0];
-
-        for (int i = 1; i < pixels.length; i++) {
-            if (pixels[i] > max) {
-                max = pixels[i];
-            }
-        }
-
-        return max;
-    }
-
-    private double maxPixel(double[] pixels) {
-
-        double max = pixels[0];
-
-        for (int i = 1; i < pixels.length; i++) {
-            if (pixels[i] > max) {
-                max = pixels[i];
-            }
-        }
-
-        return max;
-    }
-
-    private int minPixel(int[] pixels) {
-
-        int min = pixels[0];
-
-        for (int i = 1; i < pixels.length; i++) {
-            if (pixels[i] < min) {
-                min = pixels[i];
-            }
-        }
-
-        return min;
-    }
-
-    private double minPixel(double[] pixels) {
-
-        double min = pixels[0];
-
-        for (int i = 1; i < pixels.length; i++) {
-            if (pixels[i] < min) {
-                min = pixels[i];
-            }
-        }
-
-        return min;
-    }
-
-//    for (int i = ((filter.getSize() - 1) / 2); i < (inputPgm.getHeight() - ((filter.getSize() - 1) / 2)); i++) {
-//            for (int j = ((filter.getSize() - 1) / 2); j < (inputPgm.getWidth() - ((filter.getSize() - 1) / 2)); j++) {
-//                int pixel = 0;
-//                for (int a = i - ((filter.getSize() - 1) / 2); a < (i - ((filter.getSize() - 1) / 2) + filter.getSize() - 1); a++) {
-//                    for (int b = j - ((filter.getSize() - 1) / 2); b < (j - ((filter.getSize() - 1) / 2) + filter.getSize() - 1); b++) {
-//                        pixel += outPixels[]
-//                    }
-//                }
-//            }
-//        }
 }

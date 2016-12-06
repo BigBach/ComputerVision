@@ -7,11 +7,8 @@ import model.exceptions.InvalidPixelMatrixSizeException;
  * @author Marco Robutti - Filippo Cipolla
  */
 public class PGM {
-
-    private int width;
-    private int height;
     private int max_val;
-    private int[] pixels;
+    private PixelMatrixInteger pixelMatrix;
 
     /**
      *
@@ -20,15 +17,12 @@ public class PGM {
      * @param max_val of the pixel
      */
     public PGM(int width, int height, int max_val) {
-
-        this.width = width;
-        this.height = height;
         if (max_val < 0) {
             this.max_val = 0;
         } else {
             this.max_val = max_val;
         }
-        this.pixels = new int[width * height];
+        pixelMatrix = new PixelMatrixInteger(Integer.class, width, height);
     }
 
     /**
@@ -37,17 +31,9 @@ public class PGM {
      */
     public int getWidth() {
 
-        return width;
+        return pixelMatrix.getWidth();
     }
 
-    /**
-     *
-     * @param width the width to set
-     */
-    public void setWidth(int width) {
-
-        this.width = width;
-    }
 
     /**
      *
@@ -55,17 +41,9 @@ public class PGM {
      */
     public int getHeight() {
 
-        return height;
+        return pixelMatrix.getHeigth();
     }
 
-    /**
-     *
-     * @param height the height to set
-     */
-    public void setHeight(int height) {
-
-        this.height = height;
-    }
 
     /**
      *
@@ -81,65 +59,46 @@ public class PGM {
      * @param max_val the max_val to set
      */
     public void setMax_val(int max_val) {
-        
-        int previousMax_val = this.max_val;
-        
         if (max_val < 0) {
             this.max_val = 0;
-        } else {
-            this.max_val = max_val;
         }
-        if (this.max_val < previousMax_val) {
-            for (int i = 0; i < this.pixels.length; i++) {
-                this.setPixel(i, this.pixels[i]);
-            }
+        if (this.max_val < max_val) {
+            this.pixelMatrix.saturatePixels(0, max_val);
         }
+        this.max_val = max_val;
     }
 
     /**
      *
-     * @return the pixels of the image
+     * @return the pixelMatrix of the image
      */
-    public int[] getPixels() {
+    public PixelMatrixInteger getPixelMatrix() {
         
-        return this.pixels;
-//        int[] pixelsCopy = new int[pixels.length];
+        return this.pixelMatrix;
+    }
+    
+    /**
+     *
+     * @return
+     */
+    public Integer[] getPixels() {
+        
+        return this.pixelMatrix.getMatrix();
+//        int[] pixelsCopy = new int[pixelMatrix.length];
 //        //The clone() method in this case works correctly (i.e it doesn't
 //        //returns a shallow copy of the source array) because we are working with an array of primitives!
-//        pixelsCopy = pixels.clone();
+//        pixelsCopy = pixelMatrix.clone();
 //        return pixelsCopy;
     }
 
     /**
      *
-     * @param pixels the pixels to set
+     * @param pixelMatrix
      * @throws model.exceptions.InvalidPixelMatrixSizeException
      */
-    public void setPixels(int[] pixels) throws InvalidPixelMatrixSizeException {
-        
-        if (pixels.length != this.pixels.length) {
-            throw new InvalidPixelMatrixSizeException("The size of the matrix "
-                    + "doesn't match the actual size of the PGM image");
-        }
-        for (int i = 0; i < this.pixels.length; i++) {
-            this.setPixel(i, pixels[i]);
-        }
-    }
-
-    /**
-     * 
-     * @param index of the pixels array
-     * @param value that has to be store in the array of pixels
-     */
-    public void setPixel(int index, int value) {
-        
-        if (value < 0) {
-            value = 0;
-        }
-        if (value > this.max_val) {
-            value = this.max_val;
-        }
-        this.pixels[index] = value;
+    public void setPixels(PixelMatrixInteger pixelMatrix) throws InvalidPixelMatrixSizeException {
+        this.pixelMatrix = pixelMatrix;
+        this.pixelMatrix.saturatePixels(0, this.max_val);
     }
 
 }
